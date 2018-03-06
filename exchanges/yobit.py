@@ -24,7 +24,7 @@ class Yobit:
 
       result = {}
       for index, (key, item) in enumerate(response.items()):
-        result['-'.join(key.split('_')).upper()] = { 'ask': item['sell'], 'bid': item['buy'], 'volume': item['vol'] }
+        result['-'.join(key.split('_')).upper()] = { 'ask': '%.8f' % item['sell'], 'bid': '%.8f' % item['buy'], 'volume': '%.8f' % item['vol'] }
       return result
 
     except requests.exceptions.HTTPError as e:

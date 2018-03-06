@@ -35,7 +35,7 @@ class Kraken:
       else:
         result = {}
         for index, (key, item) in enumerate(response['result'].items()):
-          result[key] = { 'ask': item['a'][0], 'bid': item['b'][0], 'volume': item['v'][0] }
+          result[key] = { 'ask': '%.8f' % item['a'][0], 'bid': '%.8f' % item['b'][0], 'volume': '%.8f' % item['v'][0] }
         return result
 
     except requests.exceptions.HTTPError as e:
