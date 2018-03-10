@@ -70,7 +70,7 @@ def daemon_start(exchange, pairs, timeout, shout):
 
       time.sleep(timeout)
 
-  pairsMapping = requests.get('http://127.0.0.1:8080/mapping/%s/to/%s/pairs' % (exchange, exchange)).json()
+  pairsMapping = requests.get('http://127.0.0.1:8080/mapping/%s/pairs' % exchange).json()
 
   name='%s-%s' % (exchange, pairs)
   pid_filename='./%s.pid' % name
