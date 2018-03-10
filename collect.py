@@ -70,7 +70,11 @@ def daemon_start(exchange, pairs, timeout, shout):
 
       time.sleep(timeout)
 
-  pairsMapping = requests.get('http://127.0.0.1:8080/mapping/%s/pairs' % exchange).json()
+  try:
+    pairsMapping = requests.get('http://127.0.0.1:8080/mapping/%s/pairs' % exchange).json()
+  except:
+    click.echo(click.style('Response from %s is not valid' % 'http://127.0.0.1:8080/mapping/%s/pairs' % exchange, fg='red'))
+    sys.exit()
 
   name='%s-%s' % (exchange, pairs)
   pid_filename='./%s.pid' % name
