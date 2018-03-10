@@ -29,7 +29,8 @@ def getTickers(exchange, pairs, mapping):
 
   result = {}
   for index, (key, item) in enumerate(tickers.items()):
-    result[mapping[key]] = item
+    if key in mapping.keys():
+      result[mapping[key]] = item
 
   return result
 
