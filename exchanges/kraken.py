@@ -23,7 +23,7 @@ class Kraken:
 
     return assetPairs
 
-  def getTickers():
+  def getTickers(pairs):
     kraken = krakenex.API()
 
     try:
@@ -35,7 +35,7 @@ class Kraken:
       else:
         result = {}
         for index, (key, item) in enumerate(response['result'].items()):
-          result[key] = { 'ask': '%.8f' % item['a'][0], 'bid': '%.8f' % item['b'][0], 'volume': '%.8f' % item['v'][0] }
+          result[key] = { 'ask': '%.8f' % float(item['a'][0]), 'bid': '%.8f' % float(item['b'][0]), 'volume': '%.8f' % float(item['v'][0]) }
         return result
 
     except requests.exceptions.HTTPError as e:
