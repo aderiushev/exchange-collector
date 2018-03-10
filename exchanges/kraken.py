@@ -2,7 +2,7 @@ import requests
 import krakenex
 
 class Kraken:
-  def getAssetPairs():
+  def getAssetPairs(self):
     kraken = krakenex.API()
 
     try:
@@ -23,7 +23,7 @@ class Kraken:
 
     return assetPairs
 
-  def getTickers(pairs):
+  def getTickers():
     kraken = krakenex.API()
 
     try:

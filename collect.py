@@ -24,8 +24,14 @@ def getFormattedTime():
 def getAssetPairs(exchange):
   return getExchange(exchange).getAssetPairs()
 
-def getTickers(exchange, pairs):
-  return getExchange(exchange).getTickers(pairs)
+def getTickers(exchange, pairs, mapping):
+  tickers = getExchange(exchange).getTickers(pairs)
+
+  result = {}
+  for index, (key, item) in enumerate(tickers.items()):
+    result[mapping[key]] = item
+
+  return result
 
 @click.option('--exchange', required=True)
 @click.option('--pairs', nargs=1, required=True)
@@ -36,10 +42,14 @@ def daemon_stop(exchange, pairs):
   logger.addHandler(fh)
   logger.info('INFO [%s]: Daemon stopped' % getFormattedTime())
   pid_filename = './%s.pid' % name
-  with open(pid_filename, "r") as pid_file:
-    pid = pid_file.read()
-  os.system("kill -9 %d" % int(pid))
-  os.remove(pid_filename)
+  try:
+    with open(pid_filename, "r") as pid_file:
+      pid = pid_file.read()
+      os.system("kill -9 %d" % int(pid))
+      os.remove(pid_filename)
+      click.echo(click.style('Daemon stopped', fg='yellow'))
+  except FileNotFoundError:
+    click.echo(click.style('There is no such daemon started', fg='red'))
 
 @click.option('--exchange', required=True)
 @click.option('--pairs', nargs=1, required=True)
@@ -50,8 +60,8 @@ def daemon_start(exchange, pairs, timeout, shout):
   def run_daemon():
     while True:
       try:
-        tickers = getTickers(exchange, pairs)
-        requests.post('http://127.0.0.1:80/collect/ticker/%s' % exchange, json={ 'tickers': tickers })
+        tickers = getTickers(exchange, pairs, pairsMapping)
+        requests.post('http://127.0.0.1:8080/collect/ticker/%s' % exchange, json={ 'tickers': tickers })
         
         if shout:
           logger.error('INFO [%s]: SENT %s' % (getFormattedTime(), tickers))
@@ -60,6 +70,8 @@ def daemon_start(exchange, pairs, timeout, shout):
 
       time.sleep(timeout)
 
+  pairsMapping = requests.get('http://127.0.0.1:8080/mapping/%s/to/%s/pairs' % (exchange, exchange)).json()
+
   name='%s-%s' % (exchange, pairs)
   pid_filename='./%s.pid' % name
   fh = logging.FileHandler('%s.log' % name, "a")
@@ -67,6 +79,8 @@ def daemon_start(exchange, pairs, timeout, shout):
   keep_fds = [fh.stream.fileno()]
   daemon = Daemonize(app=name, pid=pid_filename, action=run_daemon, keep_fds=keep_fds)
   logger.info('INFO [%s]: Daemon started' % getFormattedTime())
+  click.echo(click.style('Daemon started, you\'re good :)', fg='green'))
+
   daemon.start()
 
 @click.option('--exchange', required=True)

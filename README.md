@@ -10,3 +10,4 @@ Basically it could be done with `pip install pipenv` command
 
 # Example:
 - execute `python collect.py daemon-start --exchange=kraken --pair=XXMRZUSD` to start USD-XMR scraping-daemon
+- you can see all the possible daemon options by running `python collect.py daemon-start --help`
