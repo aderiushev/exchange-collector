@@ -24,15 +24,8 @@ def getFormattedTime():
 def getAssetPairs(exchange):
   return getExchange(exchange).getAssetPairs()
 
-def getTickers(exchange, pairs, mapping):
-  tickers = getExchange(exchange).getTickers(pairs)
-
-  result = {}
-  for index, (key, item) in enumerate(tickers.items()):
-    if key in mapping.keys():
-      result[mapping[key]] = item
-
-  return result
+def getTickers(exchange, pairs):
+  return getExchange(exchange).getTickers(pairs)
 
 @click.option('--exchange', required=True)
 @click.option('--pairs', nargs=1, required=True)
@@ -61,7 +54,7 @@ def daemon_start(exchange, pairs, timeout, shout):
   def run_daemon():
     while True:
       try:
-        tickers = getTickers(exchange, pairs, pairsMapping)
+        tickers = getTickers(exchange, pairs)
         requests.post('http://127.0.0.1:8080/collect/ticker/%s' % exchange, json={ 'tickers': tickers })
         
         if shout:
@@ -70,12 +63,6 @@ def daemon_start(exchange, pairs, timeout, shout):
         logger.error('ERROR [%s]: %s' % (getFormattedTime(), e))
 
       time.sleep(timeout)
-
-  try:
-    pairsMapping = requests.get('http://127.0.0.1:8080/mapping/%s/pairs' % exchange).json()
-  except:
-    click.echo(click.style('Response from %s is not valid' % 'http://127.0.0.1:8080/mapping/%s/pairs' % exchange, fg='red'))
-    sys.exit()
 
   name='%s-%s' % (exchange, pairs)
   pid_filename='./%s.pid' % name
