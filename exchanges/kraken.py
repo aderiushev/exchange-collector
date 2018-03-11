@@ -2,7 +2,7 @@ import requests
 import krakenex
 
 class Kraken:
-  def getAssetPairs(self):
+  def getAssetPairs():
     kraken = krakenex.API()
 
     try:
@@ -21,7 +21,8 @@ class Kraken:
       # TODO: process error
       pass
 
-    return assetPairs
+  def getFilename(pairs):
+    return 'livecoin-%s' % pairs.lower()
 
   def getTickers(pairs):
     kraken = krakenex.API()

@@ -1,5 +1,4 @@
 import requests
-import krakenex
 
 class Yobit:
   def getAssetPairs():
@@ -16,7 +15,8 @@ class Yobit:
       # TODO: process error
       pass
 
-    return assetPairs
+  def getFilename(pairs):
+    return 'livecoin-%s' % pairs.lower().replace('_', '-')
 
   def getTickers(pairs):
     try:

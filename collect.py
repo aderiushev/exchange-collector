@@ -8,6 +8,7 @@ from time import gmtime, strftime
 
 from exchanges.kraken import Kraken 
 from exchanges.yobit import Yobit
+from exchanges.livecoin import Livecoin
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -17,6 +18,8 @@ def getExchange(name):
     return Kraken
   if name == 'yobit':
     return Yobit
+  if name == 'livecoin':
+    return Livecoin
 
 def getFormattedTime():
   return strftime("%d.%m.%Y %H:%M:%S", gmtime())
@@ -27,11 +30,14 @@ def getAssetPairs(exchange):
 def getTickers(exchange, pairs):
   return getExchange(exchange).getTickers(pairs)
 
+def getFilename(exchange, pairs):
+  return getExchange(exchange).getFilename(pairs)
+
 @click.option('--exchange', required=True)
 @click.option('--pairs', nargs=1, required=True)
 @click.command(name='daemon-stop', short_help='Stops daemon')
 def daemon_stop(exchange, pairs):
-  name='%s-%s' % (exchange, pairs)
+  name = getFilename(exchange, pairs)
   fh = logging.FileHandler('%s.log' % name, "a")
   logger.addHandler(fh)
   logger.info('INFO [%s]: Daemon stopped' % getFormattedTime())
@@ -64,7 +70,7 @@ def daemon_start(exchange, pairs, timeout, shout):
 
       time.sleep(timeout)
 
-  name='%s-%s' % (exchange, pairs)
+  name = getFilename(exchange, pairs)
   pid_filename='./%s.pid' % name
   fh = logging.FileHandler('%s.log' % name, "a")
   logger.addHandler(fh)
