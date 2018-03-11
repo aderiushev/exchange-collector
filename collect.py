@@ -9,6 +9,7 @@ from time import gmtime, strftime
 from exchanges.kraken import Kraken 
 from exchanges.yobit import Yobit
 from exchanges.livecoin import Livecoin
+from exchanges.poloniex import Poloniex
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -20,6 +21,8 @@ def getExchange(name):
     return Yobit
   if name == 'livecoin':
     return Livecoin
+  if name == 'poloniex':
+    return Poloniex
 
 def getFormattedTime():
   return strftime("%d.%m.%Y %H:%M:%S", gmtime())

@@ -22,7 +22,7 @@ class Kraken:
       pass
 
   def getFilename(pairs):
-    return 'livecoin-%s' % pairs.lower()
+    return 'kraken-%s' % pairs.lower()
 
   def getTickers(pairs):
     kraken = krakenex.API()
