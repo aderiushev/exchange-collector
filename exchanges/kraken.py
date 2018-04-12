@@ -1,12 +1,10 @@
 import requests
-import krakenex
 
 class Kraken:
   def getAssetPairs():
-    kraken = krakenex.API()
 
     try:
-      response = kraken.query_public('AssetPairs')
+      response = requests.get('https://api.kraken.com/0/public/AssetPairs', verify=False).json()
 
       if response['error']:
         # TODO: process error
@@ -25,11 +23,9 @@ class Kraken:
     return 'kraken-%s' % pairs.lower()
 
   def getTickers(pairs):
-    kraken = krakenex.API()
 
     try:
-      response = kraken.query_public('Ticker', { 'pair' : pairs, })
-
+      response = requests.get('https://api.kraken.com/0/public/Ticker', params={ 'pair': pairs, }, verify=False).json()
       if response['error']:
         # TODO: process error
         pass

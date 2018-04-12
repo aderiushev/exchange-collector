@@ -3,7 +3,7 @@ import requests
 class Livecoin:
   def getAssetPairs():
     try:
-      response = requests.get('https://api.livecoin.net/exchange/ticker').json()
+      response = requests.get('https://api.livecoin.net/exchange/ticker', verify=False).json()
 
       result = {}
       for index, item in enumerate(response):
@@ -21,7 +21,7 @@ class Livecoin:
   def getTickers(pairs):
     try:
       pairsArray = pairs.split(',')
-      response = requests.get('https://api.livecoin.net/exchange/ticker').json()
+      response = requests.get('https://api.livecoin.net/exchange/ticker', verify=False).json()
 
       result = {}
       for index, item in enumerate(response):

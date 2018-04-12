@@ -3,7 +3,7 @@ import requests
 class Poloniex:
   def getAssetPairs():
     try:
-      response = requests.get('https://poloniex.com/public?command=returnTicker').json()
+      response = requests.get('https://poloniex.com/public?command=returnTicker', verify=False).json()
 
       result = {}
       for index, (key, item) in enumerate(response.items()):
@@ -21,7 +21,7 @@ class Poloniex:
   def getTickers(pairs):
     try:
       pairsArray = pairs.split(',')
-      response = requests.get('https://poloniex.com/public?command=returnTicker').json()
+      response = requests.get('https://poloniex.com/public?command=returnTicker', verify=False).json()
 
       result = {}
       for index, (key, item) in enumerate(response.items()):

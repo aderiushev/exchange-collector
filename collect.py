@@ -65,9 +65,8 @@ def daemon_start(exchange, pairs, timeout, shout):
       try:
         tickers = getTickers(exchange, pairs)
         requests.post('http://127.0.0.1:8080/collect/ticker/%s' % exchange, json={ 'tickers': tickers })
-        
         if shout:
-          logger.error('INFO [%s]: SENT %s' % (getFormattedTime(), tickers))
+          logger.info('INFO [%s]: SENT %s' % (getFormattedTime(), tickers))
       except Exception as e:
         logger.error('ERROR [%s]: %s' % (getFormattedTime(), e))
 
