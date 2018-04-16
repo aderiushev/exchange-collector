@@ -1,7 +1,7 @@
 import requests
 
 class Livecoin:
-  def getAssetPairs():
+  def getAssetPairs(self):
     try:
       response = requests.get('https://api.livecoin.net/exchange/ticker', verify=False).json()
 
@@ -15,12 +15,19 @@ class Livecoin:
       # TODO: process error
       pass
 
-  def getFilename(pairs):
-    return 'livecoin-%s' % pairs.lower().replace('/', '-')
+  def getFilename(self, pairs):
+    if pairs:
+      return 'livecoin-%s' % pairs.lower().replace('/', '-')
+    else:
+      return 'livecoin-all'
 
-  def getTickers(pairs):
+  def getTickers(self, pairs):
     try:
-      pairsArray = pairs.split(',')
+      if pairs:
+        pairsArray = pairs.split(',')
+      else:
+        pairsArray = self.getAssetPairs().keys()
+
       response = requests.get('https://api.livecoin.net/exchange/ticker', verify=False).json()
 
       result = {}

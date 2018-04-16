@@ -1,8 +1,7 @@
 import requests
 
 class Kraken:
-  def getAssetPairs():
-
+  def getAssetPairs(self):
     try:
       response = requests.get('https://api.kraken.com/0/public/AssetPairs', verify=False).json()
 
@@ -19,13 +18,20 @@ class Kraken:
       # TODO: process error
       pass
 
-  def getFilename(pairs):
-    return 'kraken-%s' % pairs.lower()
+  def getFilename(self, pairs):
+    if pairs:
+      return 'kraken-%s' % pairs.lower().replace('/', '-')
+    else:
+      return 'kraken-all'
 
-  def getTickers(pairs):
-
+  def getTickers(self, pairs):
     try:
-      response = requests.get('https://api.kraken.com/0/public/Ticker', params={ 'pair': pairs, }, verify=False).json()
+      if pairs:
+        formattedPairs = pairs
+      else:
+        formattedPairs = ','.join(self.getAssetPairs().keys())
+
+      response = requests.get('https://api.kraken.com/0/public/Ticker', params={ 'pair': formattedPairs, }, verify=False).json()
       if response['error']:
         # TODO: process error
         pass

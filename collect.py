@@ -16,13 +16,13 @@ logger.setLevel(logging.DEBUG)
 
 def getExchange(name):
   if name == 'kraken':
-    return Kraken
+    return Kraken()
   if name == 'yobit':
-    return Yobit
+    return Yobit()
   if name == 'livecoin':
-    return Livecoin
+    return Livecoin()
   if name == 'poloniex':
-    return Poloniex
+    return Poloniex()
 
 def getFormattedTime():
   return strftime("%d.%m.%Y %H:%M:%S", gmtime())
@@ -37,7 +37,7 @@ def getFilename(exchange, pairs):
   return getExchange(exchange).getFilename(pairs)
 
 @click.option('--exchange', required=True)
-@click.option('--pairs', nargs=1, required=True)
+@click.option('--pairs', nargs=1, required=False)
 @click.command(name='daemon-stop', short_help='Stops daemon')
 def daemon_stop(exchange, pairs):
   name = getFilename(exchange, pairs)
@@ -55,7 +55,7 @@ def daemon_stop(exchange, pairs):
     click.echo(click.style('There is no such daemon started', fg='red'))
 
 @click.option('--exchange', required=True)
-@click.option('--pairs', nargs=1, required=True)
+@click.option('--pairs', nargs=1, required=False)
 @click.option('--timeout', nargs=1, default=15)
 @click.option('--shout/--no-shout', default=False)
 @click.command(name='daemon-start', short_help='Starts daemon on exact exchange & pairs list (delimited by comma)')

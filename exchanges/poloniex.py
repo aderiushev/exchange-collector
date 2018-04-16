@@ -1,7 +1,7 @@
 import requests
 
 class Poloniex:
-  def getAssetPairs():
+  def getAssetPairs(self):
     try:
       response = requests.get('https://poloniex.com/public?command=returnTicker', verify=False).json()
 
@@ -15,12 +15,19 @@ class Poloniex:
       # TODO: process error
       pass
 
-  def getFilename(pairs):
-    return 'poloniex-%s' % pairs.lower().replace('_', '-')
+  def getFilename(self, pairs):
+    if pairs:
+      return 'poloniex-%s' % pairs.lower().replace('_', '-')
+    else:
+      return 'poloniex-all'
 
-  def getTickers(pairs):
+  def getTickers(self, pairs):
     try:
-      pairsArray = pairs.split(',')
+      if pairs:
+        pairsArray = pairs.split(',')
+      else:
+        pairsArray = self.getAssetPairs().keys()
+
       response = requests.get('https://poloniex.com/public?command=returnTicker', verify=False).json()
 
       result = {}

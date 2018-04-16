@@ -1,7 +1,7 @@
 import requests
 
 class Yobit:
-  def getAssetPairs():
+  def getAssetPairs(self):
     try:
       response = requests.get('https://yobit.net/api/3/info', verify=False).json()
 
@@ -15,12 +15,21 @@ class Yobit:
       # TODO: process error
       pass
 
-  def getFilename(pairs):
-    return 'yobit-%s' % pairs.lower().replace('_', '-')
+  def getFilename(self, pairs):
+    if pairs:
+      return 'yobit-%s' % pairs.lower().replace('_', '-')
+    else:
+      return 'yobit-all'
 
-  def getTickers(pairs):
+  def getTickers(self, pairs):
     try:
-      response = requests.get('https://yobit.net/api/3/ticker/%s' % '-'.join(pairs.split(',')), verify=False).json()
+      if pairs:
+        formattedPairs = pairs
+      else:
+        # crunch gets only first 50 pairs
+        formattedPairs = ','.join(list(self.getAssetPairs().keys())[0:50])
+
+      response = requests.get('https://yobit.net/api/3/ticker/%s' % '-'.join(formattedPairs.split(',')), verify=False).json()
 
       result = {}
       for index, (key, item) in enumerate(response.items()):
