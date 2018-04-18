@@ -68,7 +68,9 @@ def daemon_start(exchange, pairs, timeout, shout):
         if shout:
           logger.info('INFO [%s]: SENT %s' % (getFormattedTime(), tickers))
       except Exception as e:
-        logger.error('ERROR [%s]: %s' % (getFormattedTime(), e))
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+        logger.error('ERROR [%s]: %s %s %s %s' % (getFormattedTime(), e, exc_type, fname, exc_tb.tb_lineno))
 
       time.sleep(timeout)
 
