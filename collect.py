@@ -4,6 +4,7 @@ import os, sys
 from daemonize import Daemonize
 import time
 import logging
+import json
 from time import gmtime, strftime
 
 from exchanges.kraken import Kraken 
@@ -13,6 +14,8 @@ from exchanges.poloniex import Poloniex
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
+
+ASSET_PAIRS = None
 
 def getExchange(name):
   if name == 'kraken':
@@ -28,10 +31,18 @@ def getFormattedTime():
   return strftime("%d.%m.%Y %H:%M:%S", gmtime())
 
 def getAssetPairs(exchange):
-  return getExchange(exchange).getAssetPairs()
+  global ASSET_PAIRS
+  if ASSET_PAIRS:
+    return ASSET_PAIRS
+  else:
+    ASSET_PAIRS = getExchange(exchange).getAssetPairs()
+    return ASSET_PAIRS
 
-def getTickers(exchange, pairs):
-  return getExchange(exchange).getTickers(pairs)
+def getTickers(exchange, pairs, mode):
+  if pairs:
+    return getExchange(exchange).getTickers(pairs, mode)
+  else:
+    return getExchange(exchange).getTickers(getAssetPairs(exchange).keys(), mode)
 
 def getFilename(exchange, pairs):
   return getExchange(exchange).getFilename(pairs)
@@ -58,15 +69,18 @@ def daemon_stop(exchange, pairs):
 @click.option('--pairs', nargs=1, required=False)
 @click.option('--timeout', nargs=1, default=15)
 @click.option('--shout/--no-shout', default=False)
+@click.option('--mode')
 @click.command(name='daemon-start', short_help='Starts daemon on exact exchange & pairs list (delimited by comma)')
-def daemon_start(exchange, pairs, timeout, shout):
+def daemon_start(exchange, pairs, timeout, shout, mode):
   def run_daemon():
     while True:
       try:
-        tickers = getTickers(exchange, pairs)
+        start_time = time.time()
+        tickers = getTickers(exchange, pairs, mode)
         requests.post('http://127.0.0.1:8080/collect/ticker/%s' % exchange, json={ 'tickers': tickers })
+        execTime = '%.3f' % (time.time() - start_time)
         if shout:
-          logger.info('INFO [%s]: SENT %s' % (getFormattedTime(), tickers))
+          logger.info('INFO [%s]:\nPayload %s\nExecution time: %s\n-----------------------' % (getFormattedTime(), json.dumps(tickers, sort_keys=True, indent=4), execTime))
       except Exception as e:
         exc_type, exc_obj, exc_tb = sys.exc_info()
         fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
