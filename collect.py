@@ -18,8 +18,8 @@ db_path = os.path.join(BASE_DIR, 'data.db')
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
-conn = sqlite3.connect(db_path)
 
+conn = sqlite3.connect(db_path)
 cursor = conn.cursor()
 
 cursor.execute(
@@ -35,8 +35,6 @@ cursor.execute(
     );
   '''
 )
-
-conn.commit()
 
 ASSET_PAIRS = None
 
@@ -97,6 +95,9 @@ def daemon_stop(exchange, pairs):
 @click.command(name='daemon-start', short_help='Starts daemon on exact exchange & pairs list (delimited by comma)')
 def daemon_start(exchange, pairs, timeout, shout, local, mode):
   def run_daemon():
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+
     while True:
       try:
         start_time = time.time()
