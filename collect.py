@@ -6,6 +6,7 @@ import time
 import logging
 import json
 from time import gmtime, strftime
+import sqlite3
 
 from exchanges.kraken import Kraken 
 from exchanges.yobit import Yobit
@@ -14,6 +15,23 @@ from exchanges.poloniex import Poloniex
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
+conn = sqlite3.connect('data.db')
+
+cursor = conn.cursor()
+
+cursor.execute(
+  '''
+    CREATE TABLE IF NOT EXISTS ticker (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      pair TEXT,
+      ask_value REAL,
+      ask_volume REAL,
+      bid_value REAL,
+      bid_volume REAL,
+      ts datetime default current_timestamp
+    );
+  '''
+)
 
 ASSET_PAIRS = None
 
@@ -32,15 +50,15 @@ def getFormattedTime():
 
 def getAssetPairs(exchange):
   global ASSET_PAIRS
-  if ASSET_PAIRS:
-    return ASSET_PAIRS
-  else:
+
+  if not ASSET_PAIRS:
     ASSET_PAIRS = getExchange(exchange).getAssetPairs()
-    return ASSET_PAIRS
+
+  return ASSET_PAIRS
 
 def getTickers(exchange, pairs, mode):
   if pairs:
-    return getExchange(exchange).getTickers(pairs, mode)
+    return getExchange(exchange).getTickers(pairs.split(','), mode)
   else:
     return getExchange(exchange).getTickers(getAssetPairs(exchange).keys(), mode)
 
@@ -69,15 +87,30 @@ def daemon_stop(exchange, pairs):
 @click.option('--pairs', nargs=1, required=False)
 @click.option('--timeout', nargs=1, default=15)
 @click.option('--shout/--no-shout', default=False)
+@click.option('--local/--no-local', default=False)
 @click.option('--mode')
 @click.command(name='daemon-start', short_help='Starts daemon on exact exchange & pairs list (delimited by comma)')
-def daemon_start(exchange, pairs, timeout, shout, mode):
+def daemon_start(exchange, pairs, timeout, shout, local, mode):
   def run_daemon():
     while True:
       try:
         start_time = time.time()
         tickers = getTickers(exchange, pairs, mode)
-        requests.post('http://127.0.0.1:8080/collect/ticker/%s' % exchange, json={ 'tickers': tickers })
+
+        tickersToInsert = []
+
+        for index, (key, item) in enumerate(tickers.items()):
+          tickersToInsert.append((key, item['ask']['value'], item['ask']['volume'], item['bid']['value'], item['bid']['volume']))
+
+        if local:
+          cursor.executemany('''
+            INSERT INTO ticker (pair, ask_value, ask_volume, bid_value, bid_volume)
+            VALUES (?, ?, ?, ?, ?)
+          ''', tickersToInsert)
+          conn.commit()
+        else:
+          requests.post('http://127.0.0.1:8080/collect/ticker/%s' % exchange, json={ 'tickers': tickers })
+
         execTime = '%.3f' % (time.time() - start_time)
         if shout:
           logger.info('INFO [%s]:\nPayload %s\nExecution time: %s\n-----------------------' % (getFormattedTime(), json.dumps(tickers, sort_keys=True, indent=4), execTime))
@@ -97,7 +130,9 @@ def daemon_start(exchange, pairs, timeout, shout, mode):
   logger.info('INFO [%s]: Daemon started' % getFormattedTime())
   click.echo(click.style('Daemon started, you\'re good :)', fg='green'))
 
-  daemon.start()
+  run_daemon()
+
+  #daemon.start()
 
 @click.option('--exchange', required=True)
 @click.command(name='list', short_help='Lists all the possible pairs on the concrete exchange to operate with', help='You can use the pair sysname (like XETHZUSD) in the other commands')

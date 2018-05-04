@@ -23,16 +23,11 @@ class Poloniex:
 
   def getTickers(self, pairs):
     try:
-      if pairs:
-        pairsArray = pairs.split(',')
-      else:
-        pairsArray = self.getAssetPairs().keys()
-
       response = requests.get('https://poloniex.com/public?command=returnTicker', verify=False).json()
 
       result = {}
       for index, (key, item) in enumerate(response.items()):
-        if key in pairsArray:
+        if key in pairs:
           result[key] = { 'ask': '%.8f' % float(item['lowestAsk']), 'bid': '%.8f' % float(item['highestBid']), 'volume': '%.8f' % float(item['baseVolume']) }
       return result
 
