@@ -33,6 +33,8 @@ cursor.execute(
   '''
 )
 
+conn.commit()
+
 ASSET_PAIRS = None
 
 def getExchange(name):
