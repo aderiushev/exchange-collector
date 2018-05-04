@@ -13,9 +13,12 @@ from exchanges.yobit import Yobit
 from exchanges.livecoin import Livecoin
 from exchanges.poloniex import Poloniex
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+db_path = os.path.join(BASE_DIR, 'data.db')
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
-conn = sqlite3.connect('data.db')
+conn = sqlite3.connect(db_path)
 
 cursor = conn.cursor()
 
