@@ -130,9 +130,7 @@ def daemon_start(exchange, pairs, timeout, shout, local, mode):
   logger.info('INFO [%s]: Daemon started' % getFormattedTime())
   click.echo(click.style('Daemon started, you\'re good :)', fg='green'))
 
-  run_daemon()
-
-  #daemon.start()
+  daemon.start()
 
 @click.option('--exchange', required=True)
 @click.command(name='list', short_help='Lists all the possible pairs on the concrete exchange to operate with', help='You can use the pair sysname (like XETHZUSD) in the other commands')
