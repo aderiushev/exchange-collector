@@ -12,6 +12,7 @@ from exchanges.kraken import Kraken
 from exchanges.yobit import Yobit
 from exchanges.livecoin import Livecoin
 from exchanges.poloniex import Poloniex
+from exchanges.exmo import Exmo
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 db_path = os.path.join(BASE_DIR, 'data.db')
@@ -47,6 +48,8 @@ def getExchange(name):
     return Livecoin()
   if name == 'poloniex':
     return Poloniex()
+  if name == 'exmo':
+    return Exmo()
 
 def getFormattedTime():
   return strftime("%d.%m.%Y %H:%M:%S", gmtime())
