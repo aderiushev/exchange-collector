@@ -39,6 +39,18 @@ cursor.execute(
 
 ASSET_PAIRS = None
 
+def run_async(func):
+  from threading import Thread
+  from functools import wraps
+
+  @wraps(func)
+  def async_func(*args, **kwargs):
+    func_hl = Thread(target = func, args = args, kwargs = kwargs)
+    func_hl.start()
+    return func_hl
+
+  return async_func
+
 def getExchange(name):
   if name == 'kraken':
     return Kraken()
@@ -98,29 +110,32 @@ def daemon_stop(exchange, pairs):
 @click.command(name='daemon-start', short_help='Starts daemon on exact exchange & pairs list (delimited by comma)')
 def daemon_start(exchange, pairs, timeout, shout, local, mode):
   def run_daemon():
-    conn = sqlite3.connect(db_path)
+    conn = sqlite3.connect(db_path, check_same_thread=False)
     cursor = conn.cursor()
 
-    while True:
+    @run_async
+    def runFunc():
       try:
         start_time = time.time()
+        ts = int(time.time())
         tickers = getTickers(exchange, pairs, mode)
 
         tickersToInsert = []
 
         for index, (key, item) in enumerate(tickers.items()):
-          tickersToInsert.append((key, item['ask']['value'], item['ask']['volume'], item['bid']['value'], item['bid']['volume']))
+          tickersToInsert.append((key, item['ask']['value'], item['ask']['volume'], item['bid']['value'], item['bid']['volume'], ts))
 
         if local:
           cursor.executemany('''
-            INSERT INTO ticker (pair, ask_value, ask_volume, bid_value, bid_volume)
-            VALUES (?, ?, ?, ?, ?)
+            INSERT INTO ticker (pair, ask_value, ask_volume, bid_value, bid_volume, ts)
+            VALUES (?, ?, ?, ?, ?, ?)
           ''', tickersToInsert)
           conn.commit()
         else:
-          requests.post('http://127.0.0.1:8080/collect/ticker/%s' % exchange, json={ 'tickers': tickers })
+          requests.post('http://127.0.0.1:8080/collect/ticker/%s' % exchange, json={ 'tickers': { 'data': tickers, ts: ts } })
 
         execTime = '%.3f' % (time.time() - start_time)
+
         if shout:
           logger.info('INFO [%s]:\nPayload %s\nExecution time: %s\n-----------------------' % (getFormattedTime(), json.dumps(tickers, sort_keys=True, indent=4), execTime))
       except Exception as e:
@@ -128,6 +143,8 @@ def daemon_start(exchange, pairs, timeout, shout, local, mode):
         fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
         logger.error('ERROR [%s]: %s %s %s %s' % (getFormattedTime(), e, exc_type, fname, exc_tb.tb_lineno))
 
+    while True:
+      runFunc()
       time.sleep(timeout)
 
   name = getFilename(exchange, pairs)
