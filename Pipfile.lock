@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "cfeda9d18f08b7b083b36f6e744e0bc733caee25545be770a847c06b664568d7"
+            "sha256": "f6cec345b146491702ea27c0d4d768583bc37bf8e38e466fcbc9a949edb291f3"
         },
         "pipfile-spec": 1,
         "requires": {},
@@ -14,7 +14,7 @@
     },
     "default": {
         "certifi": {
-            "version": "==2018.1.18"
+            "version": "==2018.4.16"
         },
         "chardet": {
             "version": "==3.0.4"
@@ -26,16 +26,19 @@
             "version": "==2.4.7"
         },
         "idna": {
-            "version": "==2.6"
+            "version": "==2.7"
         },
         "krakenex": {
-            "version": "==2.0.0"
+            "version": "==2.1.0"
+        },
+        "numpy": {
+            "version": "==1.14.5"
         },
         "requests": {
-            "version": "==2.18.4"
+            "version": "==2.19.1"
         },
         "urllib3": {
-            "version": "==1.22"
+            "version": "==1.23"
         }
     },
     "develop": {}

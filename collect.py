@@ -7,6 +7,7 @@ import logging
 import json
 from time import gmtime, strftime
 import sqlite3
+import numpy as np
 
 from exchanges.kraken import Kraken 
 from exchanges.yobit import Yobit
@@ -50,6 +51,34 @@ def run_async(func):
     return func_hl
 
   return async_func
+
+def getDeriv(array, dimension=1):
+  result = 0
+  if dimension == 1:
+    result = np.average(
+      np.gradient(
+        np.array(
+          array,
+          dtype=float
+        )
+      )
+    )
+  elif dimension == 2:
+    result = np.average(
+      np.gradient(
+        np.gradient(
+          np.array(
+            array,
+            dtype=float
+          )
+        )
+      )
+    )
+
+  if result == 0:
+    return 0
+  else:
+    return '%.8f' % result
 
 def getExchange(name):
   if name == 'kraken':
@@ -112,6 +141,7 @@ def daemon_start(exchange, pairs, timeout, shout, local, mode):
   def run_daemon():
     conn = sqlite3.connect(db_path, check_same_thread=False)
     cursor = conn.cursor()
+    history = []
 
     @run_async
     def runFunc():
@@ -119,20 +149,40 @@ def daemon_start(exchange, pairs, timeout, shout, local, mode):
         start_time = time.time()
         ts = int(time.time())
         tickers = getTickers(exchange, pairs, mode)
+        history.append(tickers)
 
-        tickersToInsert = []
+        if len(history) > 3:
+          history.pop(0)
 
-        for index, (key, item) in enumerate(tickers.items()):
-          tickersToInsert.append((key, item['ask']['value'], item['ask']['volume'], item['bid']['value'], item['bid']['volume'], ts))
+        if len(history) == 3:
+          for index, (key, item) in enumerate(tickers.items()):
+            item['meta'] = {
+              'ask_deriv': getDeriv([ item[key]['ask']['value'] for item in history[:2] ], 1),
+              'bid_deriv': getDeriv([ item[key]['bid']['value'] for item in history[:2] ], 1),
+              'ask_deriv2': getDeriv([ item[key]['ask']['value'] for item in history ], 2),
+              'bid_deriv2': getDeriv([ item[key]['bid']['value'] for item in history ], 2),
+            }
 
         if local:
+          tickersToInsert = []
+
+          for index, (key, item) in enumerate(tickers.items()):
+            tickersToInsert.append((key, item['ask']['value'], item['ask']['volume'], item['bid']['value'], item['bid']['volume'], ts))
+
           cursor.executemany('''
             INSERT INTO ticker (pair, ask_value, ask_volume, bid_value, bid_volume, ts)
             VALUES (?, ?, ?, ?, ?, ?)
           ''', tickersToInsert)
           conn.commit()
         else:
-          requests.post('http://127.0.0.1:8080/collect/ticker/%s' % exchange, json={ 'tickers': { 'data': tickers, ts: ts } })
+          requests.post('http://127.0.0.1:8080/collect/ticker/%s' % exchange, json={
+            'tickers': {
+              'data': tickers,
+              'meta': {
+                'ts': ts
+              }
+            }
+          })
 
         execTime = '%.3f' % (time.time() - start_time)
 
